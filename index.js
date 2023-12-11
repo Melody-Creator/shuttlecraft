@@ -28,7 +28,7 @@ import http from 'http';
 import moment from 'moment';
 
 import { ActivityPub } from './lib/ActivityPub.js';
-import { ensureAccount } from './lib/account.js';
+import { ifAccount, getAccount } from './lib/account.js';
 
 import {
   UserProfileRouter,
@@ -43,10 +43,14 @@ import {
 
 // load process.env from .env file
 dotenv.config();
-const { USER_NAME, PASS, DOMAIN, PORT } = process.env;
-console.log('USER_NAME', USER_NAME);
+// let { USER_NAME, PASS, DOMAIN, PORT } = process.env;
+let USER_NAME = process.env.USER_NAME;
+let PASS = process.env.PASS;
+const DOMAIN = process.env.DOMAIN;
+const PORT = process.env.PORT;
 
-const envVariables = ['USER_NAME', 'PASS', 'DOMAIN'];
+// const envVariables = ['USER_NAME', 'PASS', 'DOMAIN'];
+const envVariables = ['DOMAIN'];
 const PATH_TO_TEMPLATES = './design';
 
 /**
@@ -73,7 +77,9 @@ function checkRequiredEnvironmentVariables(envVariables) {
 }
 checkRequiredEnvironmentVariables(envVariables);
 
-const app = express();
+export const app = express();
+// Export app
+// module.exports = app;
 /**
  * Handlebars helper functions for custom template rendering.
  *
@@ -239,6 +245,10 @@ setExpressApp(app);
  * });
  */
 const asyncAuthorizer = (username, password, callback) => {
+  dotenv.config();
+  USER_NAME = process.env.USER_NAME;
+  PASS = process.env.PASS;
+
   let isAuthorized = false;
   // Check if the provided password matches the hardcoded username
   const isPasswordAuthorized = username === USER_NAME;
@@ -253,6 +263,7 @@ const asyncAuthorizer = (username, password, callback) => {
   if (isAuthorized) {
     return callback(null, true);
   } else {
+    console.log('Authentication Failed', USER_NAME, PASS);
     return callback(null, false);
   }
 };
@@ -297,60 +308,65 @@ const basicUserAuth = basicAuth({
   challenge: true
 });
 
-ensureAccount(USER_NAME, DOMAIN).then(myaccount => {
-  const authWrapper = (req, res, next) => {
-    if (req.cookies.token) {
-      if (req.cookies.token === myaccount.apikey) {
-        return next();
-      }
+app.use(
+  '/account',
+  cors({
+    // credentials: true,
+    origin: true
+  }),
+  accountHandler
+);
+
+const authWrapper = (req, res, next) => {
+  let myaccount;
+  if (ifAccount()) {
+    myaccount = getAccount();
+    req.app.set('account', myaccount);
+    ActivityPub.account = myaccount;
+  } else {
+    // If no user exist, i redirect to create account page
+    res.redirect('/account/create');
+  }
+
+  if (req.cookies.token) {
+    if (req.cookies.token === myaccount.apikey) {
+      return next();
     }
-    return basicUserAuth(req, res, next);
-  };
+  }
+  return basicUserAuth(req, res, next);
+};
 
-  // set the server to use the main account as its primary actor
-  ActivityPub.account = myaccount;
-  console.log(`BOOTING SERVER FOR ACCOUNT: ${myaccount.actor.preferredUsername}`);
-  console.log(`ACCESS DASHBOARD: https://${DOMAIN}/private`);
+console.log(`ACCESS DASHBOARD: https://${DOMAIN}/private`);
 
-  // set up globals
-  app.set('domain', DOMAIN);
-  app.set('account', myaccount);
+// set up globals
+app.set('domain', DOMAIN);
+// app.set('account', myaccount);
 
-  // serve webfinger response
-  app.use('/.well-known/webfinger', cors(), WebfingerRouter);
-  // server user profile and follower list
-  app.use('/u', cors(), UserProfileRouter);
+// serve webfinger response
+app.use('/.well-known/webfinger', cors(), WebfingerRouter);
+// server user profile and follower list
+app.use('/u', cors(), UserProfileRouter);
 
-  // serve individual posts
-  app.use('/m', cors(), notes);
+// serve individual posts
+app.use('/m', cors(), notes);
 
-  // handle incoming requests
-  app.use('/api/inbox', cors(), inbox);
-  app.use('/api/outbox', cors(), outbox);
+// handle incoming requests
+app.use('/api/inbox', cors(), inbox);
+app.use('/api/outbox', cors(), outbox);
 
-  app.use(
-    '/account',
-    cors({
-      credentials: true,
-      origin: true
-    }),
-    accountHandler
-  );
+app.use(
+  '/private',
+  cors({
+    credentials: true,
+    origin: true
+  }),
+  authWrapper,
+  admin
+);
 
-  app.use(
-    '/private',
-    cors({
-      credentials: true,
-      origin: true
-    }),
-    authWrapper,
-    admin
-  );
+app.use('/', cors(), publicFacing);
+app.use('/', express.static('public/'));
 
-  app.use('/', cors(), publicFacing);
-  app.use('/', express.static('public/'));
-
-  http.createServer(app).listen(app.get('port'), function () {
-    console.log('Express server listening on port ' + app.get('port'));
-  });
+http.createServer(app).listen(app.get('port'), function () {
+  console.log('Express server listening on port ' + app.get('port'));
 });

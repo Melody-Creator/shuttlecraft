@@ -1,10 +1,11 @@
 import express from 'express';
 import { promises as fsPromises } from 'fs';
+import { ensureAccount } from '../lib/account.js';
 
 export const router = express.Router();
 
 router.post('/create', (req, res) => {
-  console.log('req.body', req.body);
+  // const app = express();
 
   // Your data to write to the .env file
   const envData = `USER_NAME=${req.body.username}
@@ -29,18 +30,19 @@ DOMAIN=${req.body.domain}
     .catch(error => {
       console.error('Error writing to .env file:', error);
     });
-  res.redirect('/private');
+
+  ensureAccount(req.body.username, req.body.domain)
+    .then(myaccount => {
+      req.app.set('account', myaccount);
+      return Promise.resolve('Yo');
+    })
+    .then(result => {
+      res.redirect('/private');
+    });
 });
 
 router.get('/create', async (req, res) => {
-  console.log('test');
   res.status(200).render('createAccount', {
     layout: 'public'
-    // containsEscapeSequences
   });
-});
-
-router.get('/logout', (req, res) => {
-  res.clearCookie('token');
-  res.redirect('/account/create');
 });
