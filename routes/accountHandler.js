@@ -36,7 +36,7 @@ router.post('/login', (req, res) => {
   const { username, password } = req.body;
 
   if (authenticateLogin(username, password)) {
-    const myaccount = getAccount(username);
+    const myaccount = getAccount();
     res.cookie('token', myaccount.apikey);
     res.redirect('/private');
   } else {
