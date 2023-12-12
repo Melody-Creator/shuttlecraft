@@ -67,7 +67,7 @@
 }
 
 #content {
-  width: 75%; /* Set the width of your child container */
+  width: 100%; /* Set the width of your child container */
   position: relative;
   left: 50%;
   transform: translateX(-50%);

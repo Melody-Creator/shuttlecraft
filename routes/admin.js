@@ -291,7 +291,7 @@ router.get('/dms/:handle?', async (req, res) => {
 
   res.render('dms', {
     layout: 'private',
-    nonav: true,
+    nonav: false,
     me: ActivityPub.actor,
     prefs: getPrefs(),
     url: '/dms',
