@@ -1,48 +1,55 @@
 import express from 'express';
-import { promises as fsPromises } from 'fs';
-import { ensureAccount } from '../lib/account.js';
+import { authenticateLogin, writeEnvToFile, createAccount } from '../lib/authentication.js';
+import { getAccount, ifAccount } from '../lib/account.js';
 
 export const router = express.Router();
 
-router.post('/create', (req, res) => {
-  // const app = express();
-
-  // Your data to write to the .env file
-  const envData = `USER_NAME=${req.body.username}
-PASS=${req.body.password}
-DOMAIN=${req.body.domain}
-  `;
-
-  // Path to your .env file
-  const envFilePath = './.env';
-
-  // Use fsPromises.writeFile for asynchronous file writing
-  fsPromises
-    .writeFile(envFilePath, envData)
-    .then(() => {
-      console.log('Data has been written to .env file');
-      return fsPromises.readFile(envFilePath, 'utf-8');
-    })
-    .then(fileContents => {
-      console.log('Contents of .env file:');
-      console.log(fileContents);
-    })
-    .catch(error => {
-      console.error('Error writing to .env file:', error);
-    });
-
-  ensureAccount(req.body.username, req.body.domain)
-    .then(myaccount => {
-      req.app.set('account', myaccount);
-      return Promise.resolve('Yo');
-    })
-    .then(result => {
-      res.redirect('/private');
-    });
-});
-
+/* The code `router.get('/create', async (req, res) => { ... })` is defining a route handler for a GET
+request to the '/create' endpoint. */
 router.get('/create', async (req, res) => {
   res.status(200).render('createAccount', {
     layout: 'public'
   });
+});
+
+/* The code `router.post('/create', (req, res) => { ... })` is defining a route handler for a POST
+request to the '/create' endpoint. */
+router.post('/create', async (req, res) => {
+  await writeEnvToFile(req, res);
+  await createAccount(req, res);
+});
+
+/* The code `router.get('/login', (req, res) => { ... })` is defining a route handler for a GET request
+to the '/login' endpoint. */
+router.get('/login', (req, res) => {
+  if (!ifAccount()) {
+    res.redirect('/account/create');
+  }
+  res.status(200).render('login', {
+    layout: 'public'
+  });
+});
+
+/* The code `router.post('/login', (req, res) => { ... })` is defining a route handler for a POST
+request to the '/login' endpoint. */
+router.post('/login', (req, res) => {
+  const { username, password } = req.body;
+
+  if (authenticateLogin(username, password)) {
+    const myaccount = getAccount(username);
+    res.cookie('token', myaccount.apikey);
+    res.redirect('/private');
+  } else {
+    res.status(200).render('login', {
+      layout: 'public',
+      message: "Username or password don't match"
+    });
+  }
+});
+
+/* The code `router.get('/logout', (req, res) => { ... })` is defining a route handler for a GET
+request to the '/logout' endpoint. */
+router.get('/logout', (req, res) => {
+  res.clearCookie('token');
+  res.redirect('/account/login');
 });

@@ -15,9 +15,6 @@ import dotenv from 'dotenv';
 // the Express.js framework for building web applications
 import express from 'express';
 
-// middleware for implementing basic authentication in Express
-import basicAuth from 'express-basic-auth';
-
 // the Handlebars view engine for rendering dynamic HTML content
 import { create } from 'express-handlebars';
 
@@ -27,8 +24,14 @@ import http from 'http';
 // the Moment.js library for handling dates and times
 import moment from 'moment';
 
+// ActivityPub for handling ActivityPub requests
 import { ActivityPub } from './lib/ActivityPub.js';
-import { ifAccount, getAccount } from './lib/account.js';
+
+// Check if account already exists
+import { ifAccount } from './lib/account.js';
+
+// Authentication middleware
+import { handleAuthenticatedUser } from './lib/authentication.js';
 
 import {
   UserProfileRouter,
@@ -43,9 +46,6 @@ import {
 
 // load process.env from .env file
 dotenv.config();
-// let { USER_NAME, PASS, DOMAIN, PORT } = process.env;
-let USER_NAME = process.env.USER_NAME;
-let PASS = process.env.PASS;
 const DOMAIN = process.env.DOMAIN;
 const PORT = process.env.PORT;
 
@@ -225,115 +225,12 @@ const setExpressApp = app => {
 
 setExpressApp(app);
 
-/**
- * Asynchronous basic authorization function for Express.js.
- *
- * @param {string} username - The provided username for authorization.
- * @param {string} password - The provided password for authorization.
- * @param {Function} callback - The callback function to be called upon authorization completion.
- * @param {Error} callback.error - An error object if an error occurred during authorization, or null if successful.
- * @param {boolean} callback.authorized - A boolean indicating whether the user is authorized.
- *
- * @example
- * // Example usage:
- * asyncAuthorizer('admin', 'password123', (error, authorized) => {
- *   if (error) {
- *     console.error(error.message);
- *   } else {
- *     console.log(`User is authorized: ${authorized}`);
- *   }
- * });
- */
-const asyncAuthorizer = (username, password, callback) => {
-  dotenv.config();
-  USER_NAME = process.env.USER_NAME;
-  PASS = process.env.PASS;
-
-  let isAuthorized = false;
-  // Check if the provided password matches the hardcoded username
-  const isPasswordAuthorized = username === USER_NAME;
-
-  // Check if the provided username matches the hardcoded password
-  const isUsernameAuthorized = password === PASS;
-
-  // Set isAuthorized to true if both username and password are authorized
-  isAuthorized = isPasswordAuthorized && isUsernameAuthorized;
-
-  // Invoke the callback with the authorization result
-  if (isAuthorized) {
-    return callback(null, true);
-  } else {
-    console.log('Authentication Failed', USER_NAME, PASS);
-    return callback(null, false);
-  }
-};
-
-/**
- * Express.js middleware for basic user authentication using asyncAuthorizer.
- *
- * @typedef {Object} BasicUserAuth
- * @property {Function} authorize - Function to perform basic authorization using asyncAuthorizer.
- * @property {boolean} authorizeAsync - Indicates that authorization is performed asynchronously.
- * @property {boolean} challenge - Indicates whether to send a 401 Unauthorized response.
- *
- * @example
- * // Example usage:
- * app.use(basicUserAuth);
- */
-const basicUserAuth = basicAuth({
-  /**
-   * Function to perform basic authorization using asyncAuthorizer.
-   *
-   * @function
-   * @param {string} username - The provided username for authorization.
-   * @param {string} password - The provided password for authorization.
-   * @param {Function} callback - The callback function to be called upon authorization completion.
-   * @param {Error} callback.error - An error object if an error occurred during authorization, or null if successful.
-   * @param {boolean} callback.authorized - A boolean indicating whether the user is authorized.
-   */
-  authorizer: asyncAuthorizer,
-
-  /**
-   * Indicates that authorization is performed asynchronously.
-   *
-   * @type {boolean}
-   */
-  authorizeAsync: true,
-
-  /**
-   * Indicates whether to send a 401 Unauthorized response.
-   *
-   * @type {boolean}
-   */
-  challenge: true
-});
-
-app.use(
-  '/account',
-  cors({
-    // credentials: true,
-    origin: true
-  }),
-  accountHandler
-);
-
 const authWrapper = (req, res, next) => {
-  let myaccount;
   if (ifAccount()) {
-    myaccount = getAccount();
-    req.app.set('account', myaccount);
-    ActivityPub.account = myaccount;
+    handleAuthenticatedUser(req, res, next);
   } else {
-    // If no user exist, i redirect to create account page
     res.redirect('/account/create');
   }
-
-  if (req.cookies.token) {
-    if (req.cookies.token === myaccount.apikey) {
-      return next();
-    }
-  }
-  return basicUserAuth(req, res, next);
 };
 
 console.log(`ACCESS DASHBOARD: https://${DOMAIN}/private`);
@@ -354,6 +251,17 @@ app.use('/m', cors(), notes);
 app.use('/api/inbox', cors(), inbox);
 app.use('/api/outbox', cors(), outbox);
 
+// serve account creation and login
+app.use(
+  '/account',
+  cors({
+    credentials: true,
+    origin: true
+  }),
+  accountHandler
+);
+
+// serve user dashboard
 app.use(
   '/private',
   cors({
