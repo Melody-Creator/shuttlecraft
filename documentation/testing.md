@@ -18,7 +18,7 @@ Here is a list of standards that we try to adhere to when creating tests:
 
 ### Creating an account
 
-1. Remix the project on Glitch.
+1. Go to https://glitch.com/edit/#!/import/github/CSE-210-Team-6/shuttlecraft.
 2. Set the DOMAIN environment variable in `.env` file. It should be `{glitch-project-name}.glitch.me`.
 3. Enter your domain in the browser. It should redirect you to `/account/create`, where you can create an account.
 4. Add a username and password of your choice. The domain should be the same as the one in the `.env` file.
