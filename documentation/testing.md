@@ -18,14 +18,28 @@ Here is a list of standards that we try to adhere to when creating tests:
 
 ### Creating an account
 
+1. Remix the project on Glitch.
+2. Set the DOMAIN environment variable in `.env` file. It should be `{glitch-project-name}.glitch.me`.
+3. Enter your domain in the browser. It should redirect you to `/account/create`, where you can create an account.
+4. Add a username and password of your choice. The domain should be the same as the one in the `.env` file.
+5. Create the account; you should be logged in and redirected to `/private` to see your account.
+
 ### Logging into an account
 
+1. When you go to `/private`, if you are not logged in, you should be redirected to `/account/login`.
+2. Enter your username and password.
+3. If the credentials are correct, you should be redirected to `/private` to see your account. If the credentials are incorrect, you should be prompted to enter the correct credentials.
+
 ### Logging out of an account
+
+1. Go to `/account/logout`.
+2. You should be logged out and should be prompted to login again.
 
 ### Home page
 
 1. After creating an account/logging in, you should be redirected to the home page. On the left hand side, there should be different sections: `Latest`, `Notifications`, `Messages`, `Compose`, `My Posts`, `Prefs`, and `Bugs & Issues`. The default section that is selected should be `Latest`.
-![Screenshot 2023-12-14 at 8 08 53 PM](https://github.com/CSE-210-Team-6/shuttlecraft/assets/52771821/f4461699-e8f0-46a2-91fc-880d6eb2c7be)
+
+   ![Screenshot 2023-12-14 at 8 08 53 PM](https://github.com/CSE-210-Team-6/shuttlecraft/assets/52771821/f4461699-e8f0-46a2-91fc-880d6eb2c7be)
 
 ### Following a person
 
@@ -45,13 +59,46 @@ Here is a list of standards that we try to adhere to when creating tests:
 3. Refresh the page.
 4. You should no longer see the person you unfollowed on the left hand side.
 
-1. Remix the project on Glitch.
-2. Set the environment variable in .env file.
-3. Enter your domain in the browser, you can see your public homepage and add /private at the end you can see your private homepage.
-4. The first step is to create your account, enter your username, password and domain.
-5. You should see your username, user domain, latest posts, avatar in the public homepage.
-6. In your private homepage, you can see the side bars have the latest posts, notifications, messages, compose button, my posts, preferences, and some open bugs and issues. Below you can find a person in the fediverse by enter the domain. 
-7. We can change our preferences by using prefs button. For example, we can modify the interface strings of the post button, change some image buttons and the account profile. We can change our username, bios and avatar and see the change in our public homepage. We can also see our followers and following if we are followed or following someone else.
-8. We then can test our compose functionality by clicking on compose button on the side bar. We can send something in the box and choose whether this post can be reply, boost or liked via the checkbox below. Click on post then we and our followers will see the post in the latest post page. We can also see the post in my post page. We can edit our post, reply, boost, like our/others' posts too.
-9. We can follow someone by searching them in the search box and the user will appear in your private homepage. We can send message to others and view the messages in the messages page. In additon, we can get notifications when someone sends you a message, interact with your posts or follow you.
-10. You can login after you create the account using username and password.
+### Sending a message
+
+1. On the left hand side, click on a person that you follow or find a person and click on their profile.
+2. Click on the button next to the `Follow` button.
+3. You should be redirected to a page that shows your messages with that person.
+4. Enter the message that you would like to send in the text box. Click the `Send` button.
+5. You should see your message appear on the page.
+
+### Composing a post
+
+1. On the left hand side, click on the `Compose` section. You should be redirected to `/private/post`.
+2. Enter what you would like to post in the text box.
+3. You may optionally specify a content warning.
+4. You may also specify if you would like to allow replies, boosts, or faves. By default, all of them are allowed. To change that, uncheck the checkboxes.
+5. Click the `Compose` button to create the post.
+6. You should be redirected to the `Latest` section where you should see your post.
+
+### Latest
+
+1. On the left hand side, click on the `Latest` section. You should be redirected to `/private`.
+2. You should see a list of the activity from your posts or people that you follow.
+
+### Notifications
+
+1. On the left hand side, click on the `Notifications` section. You should be redirected to `/private/notifications`.
+2. You should see a list of the activity from things related to you, e.g., someone following you.
+
+### My Posts
+
+1. On the left hand side, click on the `My Posts` section. You should be redirected to `/private/feeds/{your-username}@{your-domain}`.
+2. You should see your profile at the top. Below this, you should see a list of your posts.
+
+### Prefs
+
+1. On the left hand side, click on the `Prefs` section.
+2. At the top, you should see links to your public page, your followers, and who you are following.
+3. Below that, you can change the emojis and the text of the `Compose` button.
+4. Underneath the `Preferences`, you can change your username, set a bio, and choose an avatar for your profile.
+
+### Bugs & Issues
+
+1. On the left hand side, click on the `Bugs & Issues` section. You should be redirected to https://github.com/benbrown/shuttlecraft/issues.
+
