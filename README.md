@@ -36,6 +36,10 @@ You can check our documentation here: [shuttlecraft docs on Github Pages](https:
 
 We plotted our mind map on [miro](https://miro.com/app/board/uXjVNe2yKIw=/?share_link_id=824120355906).
 
+# ADR
+
+Our ADR can be found here: [ADR_Team6](/projectDocs/ADR_Team6.docx)
+
 ## Warning: Experimental Software!
 
 This software should be considered an EXPERIMENTAL PROTOTYPE.
