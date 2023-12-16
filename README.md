@@ -28,6 +28,18 @@ Not yet supported:
 
 - Media uploads
 
+# Documentation
+
+You can check our documentation here: [shuttlecraft docs on Github Pages](https://cse-210-team-6.github.io/shuttlecraft/)
+
+# Mind map
+
+We plotted our mind map on [miro](https://miro.com/app/board/uXjVNe2yKIw=/?share_link_id=824120355906).
+
+# ADR
+
+Our ADR can be found here: [ADR_Team6](/projectDocs/ADR_Team6.docx)
+
 ## Warning: Experimental Software!
 
 This software should be considered an EXPERIMENTAL PROTOTYPE.
